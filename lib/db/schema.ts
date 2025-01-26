@@ -29,7 +29,10 @@ export const chat = pgTable('Chat', {
   visibility: varchar('visibility', { enum: ['public', 'private'] })
     .notNull()
     .default('private'),
+  ip: varchar('ip', { length: 45 }), // Accommodates both IPv4 and IPv6
+  location: text('location'), // Stores location as JSON or a string
 });
+
 
 export type Chat = InferSelectModel<typeof chat>;
 

@@ -57,6 +57,32 @@ export async function POST(request: Request) {
 
   if (!session || !session.user || !session.user.id) {
     return new Response('Unauthorized', { status: 401 });
+
+  }
+
+  // Extract IP from request headers
+  const forwardedFor = request.headers.get('x-forwarded-for') || '';
+  let ip = forwardedFor.split(',')[0] || 'Unknown IP';
+
+  // Replace loopback IP for local testing
+  if (ip === '::1') {
+    ip = '127.0.0.1';
+  }
+
+  // Fetch location based on IP
+  let location = {
+    error: 'localhost',
+  };
+  if (ip !== '127.0.0.1') {
+    try {
+      const response = await fetch(`https://ipinfo.io/${ip}/geo?token=${process.env.IPINFO_TOKEN}`);
+      if (response.ok) {
+        location = await response.json();
+      }
+    } catch (err) {
+      console.error('Error fetching location:', err);
+      location = { error: 'Failed to fetch location' };
+    }
   }
 
   const model = models.find((model) => model.id === modelId);
@@ -76,7 +102,8 @@ export async function POST(request: Request) {
 
   if (!chat) {
     const title = await generateTitleFromUserMessage({ message: userMessage });
-    await saveChat({ id, userId: session.user.id, title });
+    const userId = session.user.id;
+    await saveChat({ id, userId, title, ip, location: JSON.stringify(location) });  
   }
 
   const userMessageId = generateUUID();

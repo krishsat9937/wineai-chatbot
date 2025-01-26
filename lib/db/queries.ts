@@ -51,10 +51,14 @@ export async function saveChat({
   id,
   userId,
   title,
+  ip,
+  location,
 }: {
   id: string;
   userId: string;
   title: string;
+  ip: string;
+  location: string;
 }) {
   try {
     return await db.insert(chat).values({
@@ -62,12 +66,15 @@ export async function saveChat({
       createdAt: new Date(),
       userId,
       title,
+      ip,
+      location, // Save IP and location in the database
     });
   } catch (error) {
-    console.error('Failed to save chat in database');
+    console.error('Failed to save chat in database:', error);
     throw error;
   }
 }
+
 
 export async function deleteChatById({ id }: { id: string }) {
   try {
